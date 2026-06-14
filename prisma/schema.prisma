@@ -1,0 +1,478 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// CORE MODELS - مِرصاد (Mirsad) Arab Monitor
+// ============================================
+
+/// مصادر الأخبار - News Sources
+model Source {
+  id          String   @id @default(cuid())
+  name        String              // اسم المصدر
+  nameAr      String?             // الاسم بالعربية
+  url         String              // رابط المصدر
+  feedUrl     String?             // رابط RSS
+  type        SourceType @default(RSS)  // نوع المصدر
+  category    String?             // تصنيف المصدر
+  country     String?             // دولة المصدر
+  language    String  @default("ar")  // اللغة
+  credibility Int     @default(50) // مصداقية المصدر (0-100)
+  isActive    Boolean @default(true)
+  lastFetched DateTime?
+  fetchCount  Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  articles    Article[]
+
+  @@index([type, isActive])
+  @@index([country])
+}
+
+enum SourceType {
+  RSS
+  API
+  WEBHOOK
+  MANUAL
+}
+
+/// المقالات والأخبار - Articles & News
+model Article {
+  id            String   @id @default(cuid())
+  title         String              // العنوان
+  titleAr       String?             // العنوان بالعربية (إذا كان أصلاً بلغة أخرى)
+  content       String?             // المحتوى الكامل
+  summary       String?             // ملخص
+  summaryAi     String?             // ملخص الذكاء الاصطناعي
+  url           String              @unique // رابط المقال الأصلي
+  imageUrl      String?             // صورة المقال
+  publishedAt   DateTime?           // تاريخ النشر
+  fetchedAt     DateTime @default(now()) // تاريخ الجلب
+  
+  // التصنيف
+  category      ArticleCategory?    // تصنيف المقال
+  sentiment     SentimentType?      // الشعور العام
+  riskLevel     RiskLevel?          // مستوى المخاطر
+  
+  // الكيانات المستخرجة
+  entities      Json?               // الكيانات المستخرجة (دول، أشخاص، شركات)
+  topics        Json?               // المواضيع
+  
+  // العلاقات
+  sourceId      String?
+  source        Source?             @relation(fields: [sourceId], references: [id])
+  countryId     String?
+  country       Country?            @relation(fields: [countryId], references: [id])
+  events        Event[]
+  insights      Insight[]
+  
+  // التفاعل
+  viewCount     Int     @default(0)
+  shareCount    Int     @default(0)
+  bookmarkCount Int     @default(0)
+  
+  // الذكاء الاصطناعي
+  aiProcessed   Boolean @default(false)
+  aiProcessedAt DateTime?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([publishedAt])
+  @@index([category])
+  @@index([countryId])
+  @@index([sourceId])
+  @@index([riskLevel])
+}
+
+enum ArticleCategory {
+  POLITICS     // سياسة
+  ECONOMY      // اقتصاد
+  SECURITY     // أمن
+  TECHNOLOGY   // تقنية
+  ENERGY       // طاقة
+  HEALTH       // صحة
+  ENVIRONMENT  // بيئة
+  SPORTS       // رياضة
+  CULTURE      // ثقافة
+  OTHER        // أخرى
+}
+
+enum SentimentType {
+  POSITIVE     // إيجابي
+  NEGATIVE     // سلبي
+  NEUTRAL      // محايد
+  MIXED        // مختلط
+}
+
+enum RiskLevel {
+  LOW          // منخفض
+  MEDIUM       // متوسط
+  HIGH         // عالي
+  CRITICAL     // حرج
+}
+
+/// الدول - Countries
+model Country {
+  id              String   @id @default(cuid())
+  code            String   @unique  // رمز الدولة (ISO)
+  name            String              // الاسم بالإنجليزية
+  nameAr          String              // الاسم بالعربية
+  region          String?             // المنطقة
+  regionAr        String?             // المنطقة بالعربية
+  capital         String?
+  capitalAr       String?
+  coordinates     Json?               // إحداثيات المركز
+  flag            String?             // رمز العلم emoji
+  population      Int?
+  gdp             Float?              // الناتج المحلي
+  
+  // مؤشرات
+  riskIndex       Float?              // مؤشر المخاطر
+  stabilityIndex  Float?              // مؤشر الاستقرار
+  mediaFreedomIdx Float?              // مؤشر حرية الإعلام
+  
+  // العلاقات
+  articles        Article[]
+  events          Event[]
+  timeline        TimelineItem[]
+  
+  // إحصائيات
+  articleCount    Int     @default(0)
+  eventCount      Int     @default(0)
+  lastUpdate      DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([region])
+  @@index([riskIndex])
+}
+
+/// الأحداث - Events
+model Event {
+  id            String   @id @default(cuid())
+  title         String              // عنوان الحدث
+  titleAr       String?             // العنوان بالعربية
+  description   String?             // الوصف
+  descriptionAr String?             // الوصف بالعربية
+  
+  // التوقيت والمكان
+  occurredAt    DateTime?           // وقت الحدث
+  location      String?             // المكان
+  coordinates   Json?               // إحداثيات الموقع
+  
+  // التصنيف
+  type          EventType?
+  severity      EventSeverity?
+  status        EventStatus @default(ACTIVE)
+  
+  // العلاقات
+  countryId     String?
+  country       Country?            @relation(fields: [countryId], references: [id])
+  articleId     String?
+  article       Article?            @relation(fields: [articleId], references: [id])
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([occurredAt])
+  @@index([type])
+  @@index([countryId])
+}
+
+enum EventType {
+  CONFLICT      // صراع
+  ELECTION      // انتخابات
+  AGREEMENT     // اتفاقية
+  PROTEST       // احتجاج
+  DISASTER      // كارثة
+  ANNOUNCEMENT  // إعلان
+  VISIT         // زيارة
+  MEETING       // اجتماع
+  OTHER         // أخرى
+}
+
+enum EventSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum EventStatus {
+  ACTIVE        // نشط
+  ONGOING       // مستمر
+  RESOLVED      // انتهى
+  ARCHIVED      // مؤرشف
+}
+
+/// التوقيت الزمني - Timeline Items
+model TimelineItem {
+  id          String   @id @default(cuid())
+  title       String
+  titleAr     String?
+  description String?
+  descriptionAr String?
+  date        DateTime
+  type        String?             // نوع الحدث
+  importance  Int      @default(1) // الأهمية (1-5)
+  
+  countryId   String?
+  country     Country?            @relation(fields: [countryId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date])
+  @@index([countryId])
+}
+
+/// الرؤى الذكية - AI Insights
+model Insight {
+  id          String   @id @default(cuid())
+  type        InsightType
+  title       String
+  titleAr     String?
+  content     String              // المحتوى بالإنجليزية
+  contentAr   String?             // المحتوى بالعربية
+  confidence  Float?              // ثقة النموذج (0-1)
+  
+  // البيانات المرتبطة
+  data        Json?               // بيانات إضافية
+  entities    Json?               // الكيانات المعنية
+  
+  articleId   String?
+  article     Article?            @relation(fields: [articleId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum InsightType {
+  SUMMARY          // ملخص
+  TREND            // اتجاه
+  ANOMALY          // شذوذ
+  PREDICTION       // توقع
+  CONNECTION       // ربط
+  RECOMMENDATION   // توصية
+}
+
+/// التنبيهات - Alerts
+model Alert {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String?
+  description String?
+  descriptionAr String?
+  
+  // شروط التنبيه
+  keywords    Json?               // كلمات مفتاحية
+  countries   Json?               // دول محددة
+  categories  Json?               // تصنيفات
+  riskLevels  Json?               // مستويات مخاطر
+  sources     Json?               // مصادر محددة
+  
+  // الإعدادات
+  isActive    Boolean @default(true)
+  frequency   AlertFrequency @default(IMMEDIATE)
+  channels    Json?               // قنوات الإرسال
+  
+  // الإحصائيات
+  triggerCount Int    @default(0)
+  lastTriggered DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+enum AlertFrequency {
+  IMMEDIATE    // فوري
+  HOURLY       // كل ساعة
+  DAILY        // يومي
+  WEEKLY       // أسبوعي
+}
+
+/// تفضيلات المستخدم - User Preferences
+model UserPreference {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  
+  // التفضيلات
+  theme       String   @default("system")  // light, dark, system
+  language    String   @default("ar")
+  region      String?             // المنطقة المفضلة
+  countries   Json?               // الدول المتابعة
+  topics      Json?               // المواضيع المتابعة
+  sources     Json?               // المصادر المفضلة
+  
+  // إعدادات العرض
+  dashboard   Json?               // إعدادات لوحة التحكم
+  notifications Json?             // إعدادات الإشعارات
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// سجل البحث - Search History
+model SearchHistory {
+  id          String   @id @default(cuid())
+  query       String
+  filters     Json?
+  resultsCount Int?
+  
+  createdAt   DateTime @default(now())
+
+  @@index([query])
+  @@index([createdAt])
+}
+
+/// الإشارات المرجعية - Bookmarks
+model Bookmark {
+  id          String   @id @default(cuid())
+  articleId   String
+  notes       String?
+  tags        Json?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([articleId])
+}
+
+/// سجل النظام - System Logs
+model SystemLog {
+  id          String   @id @default(cuid())
+  level       LogLevel
+  message     String
+  details     Json?
+  source      String?
+  
+  createdAt   DateTime @default(now())
+
+  @@index([level])
+  @@index([createdAt])
+}
+
+enum LogLevel {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+/// إحصائيات يومية - Daily Statistics
+model DailyStat {
+  id              String   @id @default(cuid())
+  date            DateTime @unique
+  articlesCount   Int      @default(0)
+  eventsCount     Int      @default(0)
+  sourcesActive   Int      @default(0)
+  alertsTriggered Int      @default(0)
+  aiProcessed     Int      @default(0)
+  topCountries    Json?
+  topTopics       Json?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([date])
+}
+
+// ============================================
+// إعلانات AdSense - Ad Slots Management
+// ============================================
+/// وحدات الإعلانات - يمكن إدارتها من لوحة الأدمن
+model AdSlot {
+  id          String   @id @default(cuid())
+  
+  // معلومات أساسية
+  name        String              // اسم وصفي (مثل: "بانر الصفحة الرئيسية")
+  description String?             // وصف اختياري
+  
+  // معرفات AdSense
+  slotId      String              // Slot ID من AdSense (مثل: "1234567890")
+  clientId    String?             // Client ID (اختياري - يأخذ من env إذا كان فارغاً)
+  
+  // الموضع
+  position    AdPosition          // أين يظهر الإعلان
+  
+  // المقاسات والتنسيق
+  format      AdFormat @default(AUTO)  // نوع/تنسيق الإعلان
+  width       Int?                // العرض بالـ pixels (اختياري)
+  height      Int?                // الارتفاع بالـ pixels (اختياري)
+  responsive  Boolean @default(true)   // هل متجاوب؟
+  
+  // للإعلانات Fluid
+  layout      String?             // مثل "in-article" أو "in-feed"
+  layoutKey   String?             // Layout key للـ in-feed ads
+  
+  // الإعدادات
+  isActive    Boolean @default(true)   // مفعّل/معطّل
+  priority    Int     @default(0)      // الأولوية (للترتيب إذا كان هناك أكثر من إعلان لنفس الموضع)
+  
+  // إعدادات متقدمة
+  customStyle Json?               // CSS مخصص
+  showLabel   Boolean @default(true)   // إظهار كلمة "إعلان"
+  labelText   String  @default("إعلان") // نص التسمية
+  
+  // إحصائيات
+  viewCount   Int     @default(0)
+  clickCount  Int     @default(0)
+  lastShown   DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([position, isActive])
+  @@index([isActive])
+}
+
+/// مواضع الإعلانات
+enum AdPosition {
+  HOME_TOP            // أعلى الصفحة الرئيسية
+  HOME_SIDEBAR        // الشريط الجانبي للصفحة الرئيسية
+  HOME_MIDDLE         // وسط الصفحة الرئيسية
+  HOME_BOTTOM         // أسفل الصفحة الرئيسية
+  
+  NEWS_TOP            // أعلى صفحة الأخبار
+  NEWS_INFEED         // داخل قائمة الأخبار
+  NEWS_BOTTOM         // أسفل صفحة الأخبار
+  NEWS_SIDEBAR        // جانب صفحة الأخبار
+  
+  ARTICLE_TOP         // أعلى المقال
+  ARTICLE_INLINE      // داخل المقال
+  ARTICLE_BOTTOM      // أسفل المقال
+  
+  COUNTRY_TOP         // أعلى صفحة الدولة
+  COUNTRY_BOTTOM      // أسفل صفحة الدولة
+  
+  ANALYTICS_TOP       // أعلى صفحة التحليلات
+  ANALYTICS_BOTTOM    // أسفل صفحة التحليلات
+  
+  FOOTER              // الذيل
+  CUSTOM              // مخصص
+}
+
+/// تنسيق الإعلانات
+enum AdFormat {
+  AUTO                // تلقائي
+  RECTANGLE           // مستطيل
+  HORIZONTAL          // أفقي (Banner)
+  VERTICAL            // عمودي (Skyscraper)
+  FLUID               // Fluid (in-feed/in-article)
+  SQUARE              // مربع
+}
