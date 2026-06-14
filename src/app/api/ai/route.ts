@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { LLM } from 'z-ai-web-dev-sdk';
+import { LLM } from '@/lib/llm';
 
 // Initialize LLM client
 const llm = new LLM();

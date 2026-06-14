@@ -52,12 +52,12 @@ jobs:
       - name: 🧪 Test Docker container
         run: |
           docker load --input /tmp/image.tar
-          docker run --rm -e DATABASE_URL="file:/tmp/test.db" -p 3000:3000 --timeout 30 mirsad:test &
-          sleep 10
-          if docker ps | grep -q mirsad:test; then
-            echo "✅ Container started successfully"
+          docker run -d --rm -e DATABASE_URL="file:/tmp/test.db" -p 3000:3000 mirsad:test &
+          sleep 5
+          if curl -s http://localhost:3000 > /dev/null; then
+            echo "✅ Container responded on HTTP"
           else
-            echo "❌ Container failed to start"
+            echo "❌ Container did not respond on HTTP"
             exit 1
           fi
 
