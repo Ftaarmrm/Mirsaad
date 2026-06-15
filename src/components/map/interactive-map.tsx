@@ -536,7 +536,7 @@ export function InteractiveMap({ locale, className, onEventSelect, events: event
       
       {/* Event Details Sheet */}
       <Sheet open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
-        <SheetContent side="end" className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetContent side="left" className="w-full sm:max-w-lg overflow-y-auto">
           {selectedEvent && (
             <>
               <SheetHeader>

@@ -269,7 +269,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 
 // Helper function to get daily stats
 async function getDailyStats(startDate: Date, endDate: Date) {
-  const stats = [];
+  const stats: any[] = [];
   const current = new Date(startDate);
   
   while (current <= endDate) {

@@ -38,7 +38,7 @@ export function handleError(error: unknown, context: string): NextResponse {
         success: false,
         error: 'بيانات غير صالحة',
         code: ErrorCode.VALIDATION_ERROR,
-        details: error.errors.map((e) => ({ path: e.path.join('.'), message: e.message })),
+        details: (error as any).errors.map((e: any) => ({ path: e.path.join('.'), message: e.message })),
       },
       { status: 400 },
     );
