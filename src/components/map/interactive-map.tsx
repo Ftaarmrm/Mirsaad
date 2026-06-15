@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import maplibregl, { Map as MapLibreMap, Marker, LngLatLike } from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

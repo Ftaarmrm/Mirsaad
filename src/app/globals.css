@@ -1,3 +1,6 @@
+/* MapLibre GL - CSS for interactive maps */
+@import 'https://cdn.jsdelivr.net/npm/maplibre-gl@latest/dist/maplibre-gl.css';
+
 /* Arabic Fonts - Must be first */
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;700;800;900&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&display=swap');
 
