@@ -29,8 +29,8 @@ docker-compose*.yml
 dev.log
 server.log
 
-# ── Lock files (نحتفظ بـ bun.lock فقط) ──────────────────────
-package-lock.json
+# ── Lock files (npm يستخدم package-lock.json، bun.lock غير مطلوب في Docker)
+bun.lock
 yarn.lock
 pnpm-lock.yaml
 
