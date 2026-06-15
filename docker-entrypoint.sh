@@ -30,10 +30,10 @@ fi
 # Creates the DB if it doesn't exist; applies non-destructive schema changes.
 # Will error on breaking changes (e.g. column removal) — this is intentional.
 echo "Syncing database schema..."
-bun node_modules/prisma/build/index.js db push --skip-generate
+npx prisma db push --skip-generate
 echo "Database ready."
 echo ""
 
 # ── Start server ──────────────────────────────────────────────────────────────
 echo "Starting Next.js server..."
-exec bun .next/standalone/server.js
+exec node server.js
