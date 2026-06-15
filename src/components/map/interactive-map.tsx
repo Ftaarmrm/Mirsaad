@@ -278,6 +278,21 @@ const severityConfig: Record<string, { color: string; bgColor: string; borderCol
   CRITICAL: { color: 'text-red-600', bgColor: 'bg-red-100', borderColor: 'border-red-500', label: 'حرج' },
 };
 
+// Convert coordinates to [lng, lat] format for maplibregl
+function normalizeCoordinates(coords: any): [number, number] {
+  if (Array.isArray(coords)) {
+    return coords as [number, number];
+  }
+  if (coords?.lng !== undefined && coords?.lat !== undefined) {
+    return [coords.lng, coords.lat];
+  }
+  if (coords?.lon !== undefined && coords?.lat !== undefined) {
+    return [coords.lon, coords.lat];
+  }
+  // Default fallback: center of Middle East
+  return [35, 28];
+}
+
 // Create custom marker element
 function createMarkerElement(event: MapEvent, isSelected: boolean = false): HTMLDivElement {
   const el = document.createElement('div');
@@ -406,17 +421,18 @@ export function InteractiveMap({ locale, className, onEventSelect, events: event
     
     filtered.forEach(event => {
       const el = createMarkerElement(event, selectedEvent?.id === event.id);
-      
+      const lngLat = normalizeCoordinates(event.coordinates);
+
       const marker = new Marker({ element: el, anchor: 'center' })
-        .setLngLat(event.coordinates)
+        .setLngLat(lngLat)
         .addTo(map.current!);
-      
+
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         setSelectedEvent(event);
         onEventSelect?.(event);
         map.current?.flyTo({
-          center: event.coordinates,
+          center: lngLat,
           zoom: 7,
           duration: 1500,
         });
