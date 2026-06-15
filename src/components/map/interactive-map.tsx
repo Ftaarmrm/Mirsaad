@@ -344,7 +344,18 @@ export function InteractiveMap({ locale, className, onEventSelect, events: event
   const [selectedType, setSelectedType] = React.useState<string>('all');
   const [selectedSeverity, setSelectedSeverity] = React.useState<string>('all');
   const [currentZoom, setCurrentZoom] = React.useState(4);
-  
+
+  // Load MapLibre GL CSS from CDN
+  React.useEffect(() => {
+    if (typeof document !== 'undefined' && !document.getElementById('maplibregl-css')) {
+      const link = document.createElement('link');
+      link.id = 'maplibregl-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://cdn.jsdelivr.net/npm/maplibre-gl@latest/dist/maplibre-gl.css';
+      document.head.appendChild(link);
+    }
+  }, []);
+
   // Initialize map
   React.useEffect(() => {
     if (!mapContainer.current || map.current) return;
