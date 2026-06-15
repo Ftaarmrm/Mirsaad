@@ -139,16 +139,33 @@ export default function AdminAdsPage() {
   const [loading, setLoading] = React.useState(true);
   const [search, setSearch] = React.useState('');
   const [positionFilter, setPositionFilter] = React.useState<string>('all');
-  
+
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editingAd, setEditingAd] = React.useState<AdSlot | null>(null);
   const [form, setForm] = React.useState(emptyForm);
   const [saving, setSaving] = React.useState(false);
 
   // ============================================
+  // Check Authentication
+  // ============================================
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/admin/ads?activeOnly=false');
+        if (res.status === 401) {
+          router.push('/admin/login');
+        }
+      } catch (err) {
+        // Network error, allow page to load
+      }
+    };
+    checkAuth();
+  }, [router]);
+
+  // ============================================
   // Fetch Ads
   // ============================================
-  
+
   const fetchAds = React.useCallback(async () => {
     setLoading(true);
     try {
@@ -156,13 +173,15 @@ export default function AdminAdsPage() {
       const data = await res.json();
       if (data.success) {
         setAds(data.data);
+      } else if (res.status === 401) {
+        router.push('/admin/login');
       }
     } catch (err) {
       toast.error('فشل جلب الإعلانات');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   React.useEffect(() => {
     fetchAds();
