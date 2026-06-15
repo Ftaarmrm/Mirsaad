@@ -49,12 +49,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static     ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public           ./public
 
-# --- Prisma runtime (client + query engine + CLI) ---
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma        ./node_modules/.prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma        ./node_modules/@prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma         ./node_modules/prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin/prisma    ./node_modules/.bin/prisma
-COPY --from=builder --chown=nextjs:nodejs /app/prisma                      ./prisma
+# --- Copy all node_modules (including Prisma binaries) ---
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+# --- Copy Prisma schema ---
+COPY --chown=nextjs:nodejs /app/prisma                      ./prisma
 
 # --- Entrypoint ---
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
