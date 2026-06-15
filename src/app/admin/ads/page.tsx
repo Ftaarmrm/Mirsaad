@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { ClientOnly } from '@/components/client-only';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -322,7 +323,8 @@ export default function AdminAdsPage() {
   // ============================================
   
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <ClientOnly>
+      <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -757,6 +759,7 @@ export default function AdminAdsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </ClientOnly>
   );
 }

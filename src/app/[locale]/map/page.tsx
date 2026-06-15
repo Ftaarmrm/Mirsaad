@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { ClientOnly } from '@/components/client-only';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -207,7 +208,8 @@ export default function MapPage({
   };
   
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col space-y-4">
+    <ClientOnly>
+      <div className="h-[calc(100vh-8rem)] flex flex-col space-y-4">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between shrink-0">
         <div>
@@ -527,5 +529,6 @@ export default function MapPage({
         )}
       </div>
     </div>
+    </ClientOnly>
   );
 }

@@ -334,52 +334,59 @@ export function InteractiveMap({ locale, className, onEventSelect, events: event
   // Initialize map
   React.useEffect(() => {
     if (!mapContainer.current || map.current) return;
-    
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: {
-        version: 8,
-        sources: {
-          'osm-tiles': {
-            type: 'raster',
-            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-            tileSize: 256,
-            attribution: '© OpenStreetMap',
+
+    try {
+      map.current = new maplibregl.Map({
+        container: mapContainer.current,
+        style: {
+          version: 8,
+          sources: {
+            'osm-tiles': {
+              type: 'raster',
+              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+              tileSize: 256,
+              attribution: '© OpenStreetMap',
+            },
           },
+          layers: [
+            {
+              id: 'osm-tiles',
+              type: 'raster',
+              source: 'osm-tiles',
+              minzoom: 0,
+              maxzoom: 19,
+            },
+          ],
+          glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
         },
-        layers: [
-          {
-            id: 'osm-tiles',
-            type: 'raster',
-            source: 'osm-tiles',
-            minzoom: 0,
-            maxzoom: 19,
-          },
-        ],
-        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
-      },
-      center: [35, 28],
-      zoom: 4,
-      minZoom: 2,
-      maxZoom: 12,
-      pitchWithRotate: false,
-      dragRotate: false,
-    });
-    
-    map.current.on('load', () => setMapLoaded(true));
-    map.current.on('zoom', () => {
-      if (map.current) setCurrentZoom(map.current.getZoom());
-    });
-    
-    // Add scale control
-    map.current.addControl(
-      new maplibregl.ScaleControl({ maxWidth: 200, unit: 'metric' }),
-      'bottom-right'
-    );
-    
+        center: [35, 28],
+        zoom: 4,
+        minZoom: 2,
+        maxZoom: 12,
+        pitchWithRotate: false,
+        dragRotate: false,
+      });
+
+      map.current.on('load', () => setMapLoaded(true));
+      map.current.on('zoom', () => {
+        if (map.current) setCurrentZoom(map.current.getZoom());
+      });
+
+      // Add scale control
+      map.current.addControl(
+        new maplibregl.ScaleControl({ maxWidth: 200, unit: 'metric' }),
+        'bottom-right'
+      );
+    } catch (error) {
+      console.error('Failed to initialize map:', error);
+      setMapLoaded(true); // Allow fallback UI
+    }
+
     return () => {
-      map.current?.remove();
-      map.current = null;
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
     };
   }, []);
   
