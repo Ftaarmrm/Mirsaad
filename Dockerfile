@@ -51,11 +51,12 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static     ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public           ./public
 
-# --- Prisma runtime ---
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma    ./node_modules/.prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma    ./node_modules/@prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma     ./node_modules/prisma
-COPY --from=builder --chown=nextjs:nodejs /app/prisma                  ./prisma
+# --- Prisma runtime (client + query engine + CLI) ---
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma        ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma        ./node_modules/@prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma         ./node_modules/prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin/prisma    ./node_modules/.bin/prisma
+COPY --from=builder --chown=nextjs:nodejs /app/prisma                      ./prisma
 
 # --- Entrypoint ---
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./

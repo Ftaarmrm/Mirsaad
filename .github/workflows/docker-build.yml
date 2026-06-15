@@ -52,13 +52,18 @@ jobs:
       - name: 🧪 Test Docker container
         run: |
           docker load --input /tmp/image.tar
-          # Run in detached mode without background ampersand, mapping host port 3000 to container port 3000
-          docker run -d --name mirsad-test-container -e DATABASE_URL="file:/tmp/test.db" -p 3000:3000 mirsad:test
-          
+          docker run -d --name mirsad-test-container \
+            -e DATABASE_URL="file:/tmp/test.db" \
+            -p 3000:3000 \
+            mirsad:test
+
+          # Stream container logs live so we can see startup output in CI
+          docker logs -f mirsad-test-container &
+
           # Retry curl up to 12 times (total 60 seconds)
           success=false
           for i in $(seq 1 12); do
-            echo "Checking if container is responding on port 3000 (Attempt $i/12)..."
+            echo "--- Health check attempt $i/12 ---"
             if curl -sf http://localhost:3000 > /dev/null 2>&1; then
               echo "✅ Container responded on HTTP!"
               success=true
@@ -67,16 +72,16 @@ jobs:
             sleep 5
           done
 
-          # Show logs for troubleshooting if failed
+          # Always dump final logs for context
+          echo "=== CONTAINER LOGS ==="
+          docker logs mirsad-test-container
+
           if [ "$success" = false ]; then
-            echo "❌ Container failed to respond within 30 seconds"
-            echo "=== CONTAINER LOGS ==="
-            docker logs mirsad-test-container
+            echo "❌ Container failed to respond within 60 seconds"
             docker rm -f mirsad-test-container
             exit 1
           fi
 
-          # Clean up container after success
           docker rm -f mirsad-test-container
 
       - name: 📊 Docker image info
