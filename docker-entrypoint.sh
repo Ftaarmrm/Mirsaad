@@ -25,7 +25,7 @@ fi
 # ── Push Prisma schema (non-fatal) ───────────────────────────────────────────
 # Server starts regardless — failed push is logged as warning, not a hard stop.
 echo "Syncing database schema..."
-if node_modules/.bin/prisma db push --skip-generate; then
+if node node_modules/prisma/build/index.js db push --skip-generate; then
   echo "Database ready."
 else
   echo "Warning: DB push failed (exit $?). Starting server anyway — check logs."
